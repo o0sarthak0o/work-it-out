@@ -1,6 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 // Define the User type
 export interface User {
@@ -22,49 +24,70 @@ interface AuthContextType {
 // Create the context with a default value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Map Supabase user to our User type
+const mapSupabaseUser = (user: SupabaseUser): User => {
+  return {
+    id: user.id,
+    name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+    email: user.email || '',
+    photoURL: user.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}&background=random`
+  };
+};
+
 // Create a provider component
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const storedUser = localStorage.getItem('workoutUser');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Failed to parse stored user:', error);
-        localStorage.removeItem('workoutUser');
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setLoading(true);
+        if (session?.user) {
+          const mappedUser = mapSupabaseUser(session.user);
+          setUser(mappedUser);
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    );
+
+    // Check current user on mount
+    const initializeAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const mappedUser = mapSupabaseUser(session.user);
+        setUser(mappedUser);
+      }
+      setLoading(false);
+    };
+
+    initializeAuth();
+
+    // Cleanup subscription
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  // Mock Google login
+  // Google login
   const login = async (): Promise<void> => {
-    setLoading(true);
     try {
-      // Simulate a login delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/dashboard'
+        }
+      });
       
-      // Create a mock user
-      const mockUser: User = {
-        id: 'user123',
-        name: 'John Doe',
-        email: 'john@example.com',
-        photoURL: 'https://ui-avatars.com/api/?name=John+Doe&background=random'
-      };
-      
-      // Store user in localStorage
-      localStorage.setItem('workoutUser', JSON.stringify(mockUser));
-      setUser(mockUser);
-      toast.success("Successfully logged in");
+      if (error) {
+        throw error;
+      }
     } catch (error) {
       console.error('Login failed:', error);
       toast.error("Login failed. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -72,10 +95,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async (): Promise<void> => {
     setLoading(true);
     try {
-      // Clear local storage
-      localStorage.removeItem('workoutUser');
-      localStorage.removeItem('workouts');
-      setUser(null);
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        throw error;
+      }
       toast.success("Successfully logged out");
     } catch (error) {
       console.error('Logout failed:', error);
