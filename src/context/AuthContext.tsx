@@ -75,10 +75,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Google login
   const login = async (): Promise<void> => {
     try {
+      // Get the current URL's origin
+      const currentOrigin = window.location.origin;
+      console.log("Current origin for redirect:", currentOrigin);
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/dashboard'
+          redirectTo: `${currentOrigin}/dashboard`
         }
       });
       
