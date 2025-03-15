@@ -92,14 +92,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Get the current URL's origin
       const currentOrigin = window.location.origin;
+      const currentUrl = window.location.href;
+      const currentPath = window.location.pathname;
+      
       console.log("Starting Google authentication flow");
-      console.log("Current origin for redirect:", currentOrigin);
-      console.log("Full redirect URL:", `${currentOrigin}/dashboard`);
+      console.log("Current origin:", currentOrigin);
+      console.log("Current complete URL:", currentUrl);
+      console.log("Current path:", currentPath);
+      console.log("Full redirect URL to be used:", `${currentOrigin}/dashboard`);
+      
+      // Debug Supabase config
+      console.log("Supabase URL:", "https://kovusvmvsjguukhiyjdw.supabase.co");
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${currentOrigin}/dashboard`
+          redirectTo: `${currentOrigin}/dashboard`,
+          queryParams: {
+            prompt: 'select_account'  // Force Google to always show the account selection screen
+          }
         }
       });
       
@@ -109,6 +120,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Google auth error details:", error);
         throw error;
       }
+      
+      // Log the URL we're redirecting to
+      if (data.url) {
+        console.log("Redirecting to OAuth URL:", data.url);
+      }
+      
     } catch (error) {
       console.error('Login failed:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
