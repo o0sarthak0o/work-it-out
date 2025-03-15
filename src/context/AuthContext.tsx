@@ -42,12 +42,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
+        console.log("Auth state changed event:", event);
+        console.log("Session state:", session ? "Session exists" : "No session");
+        
         setLoading(true);
         if (session?.user) {
+          console.log("User authenticated:", session.user.email);
           const mappedUser = mapSupabaseUser(session.user);
           setUser(mappedUser);
         } else {
+          console.log("No authenticated user");
           setUser(null);
         }
         setLoading(false);
@@ -56,10 +61,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Check current user on mount
     const initializeAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log("Initializing auth state...");
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Error getting session:", error);
+      }
+      
       if (session?.user) {
+        console.log("Found existing session for user:", session.user.email);
         const mappedUser = mapSupabaseUser(session.user);
         setUser(mappedUser);
+      } else {
+        console.log("No existing session found");
       }
       setLoading(false);
     };
@@ -68,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Cleanup subscription
     return () => {
+      console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
   }, []);
@@ -77,20 +92,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Get the current URL's origin
       const currentOrigin = window.location.origin;
+      console.log("Starting Google authentication flow");
       console.log("Current origin for redirect:", currentOrigin);
+      console.log("Full redirect URL:", `${currentOrigin}/dashboard`);
       
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${currentOrigin}/dashboard`
         }
       });
       
+      console.log("Auth response data:", data);
+      
       if (error) {
+        console.error("Google auth error details:", error);
         throw error;
       }
     } catch (error) {
       console.error('Login failed:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       toast.error("Login failed. Please try again.");
     }
   };
@@ -99,10 +120,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async (): Promise<void> => {
     setLoading(true);
     try {
+      console.log("Attempting to log out user");
       const { error } = await supabase.auth.signOut();
       if (error) {
+        console.error("Logout error:", error);
         throw error;
       }
+      console.log("User successfully logged out");
       toast.success("Successfully logged out");
     } catch (error) {
       console.error('Logout failed:', error);
