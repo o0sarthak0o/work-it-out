@@ -16,7 +16,8 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: () => Promise<void>;
+  loginWithOTP: (email: string) => Promise<void>;
+  verifyOTP: (email: string, token: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -87,49 +88,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Google login
-  const login = async (): Promise<void> => {
+  // Email OTP login
+  const loginWithOTP = async (email: string): Promise<void> => {
     try {
-      // Get the current URL's origin
-      const currentOrigin = window.location.origin;
-      const currentUrl = window.location.href;
-      const currentPath = window.location.pathname;
+      setLoading(true);
+      console.log("Starting email OTP authentication flow");
+      console.log("Email:", email);
       
-      console.log("Starting Google authentication flow");
-      console.log("Current origin:", currentOrigin);
-      console.log("Current complete URL:", currentUrl);
-      console.log("Current path:", currentPath);
-      console.log("Full redirect URL to be used:", `${currentOrigin}/dashboard`);
-      
-      // Debug Supabase config
-      console.log("Supabase URL:", "https://kovusvmvsjguukhiyjdw.supabase.co");
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email,
         options: {
-          redirectTo: `${currentOrigin}/dashboard`,
-          queryParams: {
-            prompt: 'select_account'  // Force Google to always show the account selection screen
-          }
+          emailRedirectTo: `${window.location.origin}/dashboard`,
         }
       });
       
-      console.log("Auth response data:", data);
+      console.log("OTP auth response:", data);
       
       if (error) {
-        console.error("Google auth error details:", error);
+        console.error("OTP auth error details:", error);
         throw error;
       }
       
-      // Log the URL we're redirecting to
-      if (data.url) {
-        console.log("Redirecting to OAuth URL:", data.url);
-      }
-      
+      toast.success("Check your email for a login link or OTP code");
     } catch (error) {
       console.error('Login failed:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
       toast.error("Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Verify OTP
+  const verifyOTP = async (email: string, token: string): Promise<void> => {
+    try {
+      setLoading(true);
+      console.log("Verifying OTP");
+      console.log("Email:", email);
+      
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'magiclink'
+      });
+      
+      console.log("OTP verification response:", data);
+      
+      if (error) {
+        console.error("OTP verification error details:", error);
+        throw error;
+      }
+      
+      if (data.user) {
+        toast.success("Successfully logged in");
+      }
+    } catch (error) {
+      console.error('OTP verification failed:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      toast.error("OTP verification failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -158,7 +176,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         loading,
-        login,
+        loginWithOTP,
+        verifyOTP,
         logout,
         isAuthenticated: !!user,
       }}
