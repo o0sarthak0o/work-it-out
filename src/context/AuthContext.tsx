@@ -39,47 +39,61 @@ const mapSupabaseUser = (user: SupabaseUser): User => {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Auth state changed event:", event);
-        console.log("Session state:", session ? "Session exists" : "No session");
-        
+    // First, check for an existing session
+    const getInitialSession = async () => {
+      try {
         setLoading(true);
-        if (session?.user) {
-          console.log("User authenticated:", session.user.email);
-          const mappedUser = mapSupabaseUser(session.user);
-          setUser(mappedUser);
+        console.log("Checking for existing session...");
+        
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error getting session:", error);
+          return;
+        }
+        
+        if (data?.session) {
+          console.log("Found existing session:", data.session.user.email);
+          setSession(data.session);
+          setUser(mapSupabaseUser(data.session.user));
         } else {
-          console.log("No authenticated user");
+          console.log("No existing session found");
+          setSession(null);
           setUser(null);
         }
+      } catch (error) {
+        console.error("Error in getInitialSession:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getInitialSession();
+
+    // Set up the auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, newSession) => {
+        console.log("Auth state changed event:", event);
+        console.log("Session state:", newSession ? "Session exists" : "No session");
+        
+        setLoading(true);
+        
+        if (newSession) {
+          console.log("User authenticated:", newSession.user.email);
+          setSession(newSession);
+          setUser(mapSupabaseUser(newSession.user));
+        } else {
+          console.log("No authenticated user");
+          setSession(null);
+          setUser(null);
+        }
+        
         setLoading(false);
       }
     );
-
-    // Check current user on mount
-    const initializeAuth = async () => {
-      console.log("Initializing auth state...");
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error("Error getting session:", error);
-      }
-      
-      if (session?.user) {
-        console.log("Found existing session for user:", session.user.email);
-        const mappedUser = mapSupabaseUser(session.user);
-        setUser(mappedUser);
-      } else {
-        console.log("No existing session found");
-      }
-      setLoading(false);
-    };
-
-    initializeAuth();
 
     // Cleanup subscription
     return () => {
