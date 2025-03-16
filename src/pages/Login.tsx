@@ -1,14 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, ArrowRight } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,14 +17,10 @@ const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
 });
 
-// OTP form schema
-const otpFormSchema = z.object({
-  otp: z.string().min(6, { message: "OTP must be 6 digits" }),
-});
-
 const Login = () => {
-  const { loginWithOTP, verifyOTP, loading, isAuthenticated } = useAuth();
+  const { loginWithOTP, loading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [emailSent, setEmailSent] = useState(false);
   const [userEmail, setUserEmail] = useState('');
 
@@ -37,32 +32,22 @@ const Login = () => {
     },
   });
 
-  // OTP form
-  const otpForm = useForm<z.infer<typeof otpFormSchema>>({
-    resolver: zodResolver(otpFormSchema),
-    defaultValues: {
-      otp: '',
-    },
-  });
+  // Get redirect path from location state or default to dashboard
+  const from = location.state?.from?.pathname || '/dashboard';
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      console.log("User is authenticated, redirecting to:", from);
+      navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, from]);
 
   // Handle email submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     await loginWithOTP(values.email);
     setUserEmail(values.email);
     setEmailSent(true);
-  };
-
-  // Handle OTP verification
-  const onVerifyOTP = async (values: z.infer<typeof otpFormSchema>) => {
-    await verifyOTP(userEmail, values.otp);
-    // The redirect will happen automatically via the useEffect if authentication is successful
   };
 
   return (

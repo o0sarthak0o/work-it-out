@@ -109,10 +109,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("Starting email OTP authentication flow");
       console.log("Email:", email);
       
+      // Get the current URL and use it for the redirect
+      const redirectTo = `${window.location.origin}/dashboard`;
+      console.log("Redirect URL:", redirectTo);
+      
       const { data, error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: redirectTo,
         }
       });
       
@@ -123,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
       
-      toast.success("Check your email for a login link or OTP code");
+      toast.success("Check your email for a login link");
     } catch (error) {
       console.error('Login failed:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
