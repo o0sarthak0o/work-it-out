@@ -79,19 +79,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log("Auth state changed event:", event);
         console.log("Session state:", newSession ? "Session exists" : "No session");
         
-        setLoading(true);
-        
-        if (newSession) {
-          console.log("User authenticated:", newSession.user.email);
-          setSession(newSession);
-          setUser(mapSupabaseUser(newSession.user));
-        } else {
-          console.log("No authenticated user");
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setLoading(true);
+          
+          if (newSession) {
+            console.log("User authenticated:", newSession.user.email);
+            setSession(newSession);
+            setUser(mapSupabaseUser(newSession.user));
+          }
+          
+          setLoading(false);
+        } else if (event === 'SIGNED_OUT') {
           setSession(null);
           setUser(null);
         }
-        
-        setLoading(false);
       }
     );
 
@@ -110,7 +111,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("Email:", email);
       
       // Get the current URL and use it for the redirect
-      const redirectTo = `${window.location.origin}/dashboard`;
+      // Make sure we're using the actual origin, not just the current path
+      const origin = window.location.origin;
+      const redirectTo = `${origin}/dashboard`;
       console.log("Redirect URL:", redirectTo);
       
       const { data, error } = await supabase.auth.signInWithOtp({

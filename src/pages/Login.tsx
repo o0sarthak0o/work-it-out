@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail } from 'lucide-react';
@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 
 // Email form schema
 const formSchema = z.object({
@@ -21,6 +22,7 @@ const Login = () => {
   const { loginWithOTP, loading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [emailSent, setEmailSent] = useState(false);
   const [userEmail, setUserEmail] = useState('');
 
@@ -34,6 +36,26 @@ const Login = () => {
 
   // Get redirect path from location state or default to dashboard
   const from = location.state?.from?.pathname || '/dashboard';
+
+  // Check if we have a token in the URL (from magic link)
+  useEffect(() => {
+    const handleMagicLink = async () => {
+      // If we have a type=recovery in the URL, this is a magic link
+      const type = searchParams.get('type');
+      
+      if (type === 'recovery') {
+        // Display a toast to let the user know we're processing
+        toast.info("Verifying your login...");
+        
+        console.log("Magic link detected, processing authentication");
+        
+        // The Supabase client will automatically handle the token in the URL
+        // We don't need to manually extract and verify it
+      }
+    };
+    
+    handleMagicLink();
+  }, [searchParams]);
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
