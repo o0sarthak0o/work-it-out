@@ -74,7 +74,7 @@ const Login = () => {
             <CardTitle className="text-2xl font-bold text-center">Sign In</CardTitle>
             <CardDescription className="text-center">
               {emailSent 
-                ? "Enter the code sent to your email"
+                ? "Check your email for a login link"
                 : "Sign in to access your workout dashboard"
               }
             </CardDescription>
@@ -97,7 +97,7 @@ const Login = () => {
                           />
                         </FormControl>
                         <FormDescription>
-                          We'll send you a one-time code to login
+                          We'll send you a login link to your email
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -108,58 +108,44 @@ const Login = () => {
                     className="w-full bg-workout-primary hover:bg-blue-600" 
                     disabled={loading}
                   >
-                    {loading ? "Sending..." : "Send Login Code"}
+                    {loading ? "Sending..." : "Send Login Link"}
                     <Mail className="ml-2 h-4 w-4" />
                   </Button>
                 </form>
               </Form>
             ) : (
-              <Form {...otpForm}>
-                <form onSubmit={otpForm.handleSubmit(onVerifyOTP)} className="space-y-4">
-                  <FormField
-                    control={otpForm.control}
-                    name="otp"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>One-Time Password</FormLabel>
-                        <FormControl>
-                          <InputOTP maxLength={6} {...field}>
-                            <InputOTPGroup>
-                              <InputOTPSlot index={0} />
-                              <InputOTPSlot index={1} />
-                              <InputOTPSlot index={2} />
-                              <InputOTPSlot index={3} />
-                              <InputOTPSlot index={4} />
-                              <InputOTPSlot index={5} />
-                            </InputOTPGroup>
-                          </InputOTP>
-                        </FormControl>
-                        <FormDescription>
-                          Enter the 6-digit code sent to your email
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-workout-primary hover:bg-blue-600" 
-                    disabled={loading}
-                  >
-                    {loading ? "Verifying..." : "Verify Code"}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
+              <div className="space-y-6">
+                <div className="text-center space-y-2">
+                  <h3 className="text-lg font-medium">Login link sent!</h3>
+                  <p className="text-muted-foreground">
+                    We've sent a login link to <span className="font-medium">{userEmail}</span>
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-4">
+                    Please check your email and click on the login link to access your account.
+                    The link will expire in 24 hours.
+                  </p>
+                </div>
+                <div className="flex flex-col space-y-2">
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="secondary"
                     className="w-full"
                     onClick={() => setEmailSent(false)}
                     disabled={loading}
                   >
-                    Back to Email
+                    Use a different email
                   </Button>
-                </form>
-              </Form>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => onSubmit(form.getValues())}
+                    disabled={loading}
+                  >
+                    Resend login link
+                  </Button>
+                </div>
+              </div>
             )}
           </CardContent>
           <CardFooter className="flex justify-center">
