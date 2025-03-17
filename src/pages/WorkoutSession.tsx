@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useAuth } from '@/context/AuthContext';
 import { useWorkout, WorkoutExercise, ExerciseSet } from '@/context/WorkoutContext';
 import Navbar from '@/components/Navbar';
 import { ArrowLeft, CheckCircle2, Check, X, Timer, TimerReset } from 'lucide-react';

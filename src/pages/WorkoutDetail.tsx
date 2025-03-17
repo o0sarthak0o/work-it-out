@@ -1,9 +1,7 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/context/AuthContext';
 import { useWorkout, Exercise } from '@/context/WorkoutContext';
 import Navbar from '@/components/Navbar';
 import { ArrowLeft, Plus, Play, Trash2, Edit } from 'lucide-react';
@@ -13,7 +11,6 @@ import { toast } from 'sonner';
 
 const WorkoutDetail = () => {
   const { workoutId } = useParams<{ workoutId: string }>();
-  const { isAuthenticated } = useAuth();
   const { getWorkout, exercises, updateWorkout, startWorkout, deleteWorkout } = useWorkout();
   const navigate = useNavigate();
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
@@ -23,20 +20,13 @@ const WorkoutDetail = () => {
   // Get the workout
   const workout = workoutId ? getWorkout(workoutId) : undefined;
 
-  // Redirect to login if not authenticated
-  React.useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
-
   // Redirect to dashboard if workout not found
   React.useEffect(() => {
-    if (!workout && !isSelectionDialogOpen && isAuthenticated) {
+    if (!workout && !isSelectionDialogOpen) {
       toast.error("Workout not found");
       navigate('/dashboard');
     }
-  }, [workout, navigate, isAuthenticated, isSelectionDialogOpen]);
+  }, [workout, navigate, isSelectionDialogOpen]);
 
   const handleAddExercises = () => {
     if (!workout || selectedExercises.length === 0) return;

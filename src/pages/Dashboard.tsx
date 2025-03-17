@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Plus, Calendar, Clock, Dumbbell } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
 import { useWorkout, Workout } from '@/context/WorkoutContext';
 import Navbar from '@/components/Navbar';
 import { formatDistanceToNow } from 'date-fns';
@@ -14,20 +13,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
 const Dashboard = () => {
-  const { user, isAuthenticated } = useAuth();
   const { workouts, addWorkout } = useWorkout();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [newWorkoutName, setNewWorkoutName] = useState('');
   const [newWorkoutDescription, setNewWorkoutDescription] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  // Redirect to login if not authenticated
-  React.useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
 
   // Filter workouts by search term
   const filteredWorkouts = workouts.filter(workout => 

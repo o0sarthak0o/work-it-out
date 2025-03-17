@@ -3,12 +3,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Dumbbell, ArrowRight } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
 
   return (
     <div className="min-h-screen flex flex-col bg-workout-background">
@@ -26,10 +24,10 @@ const Index = () => {
           </div>
           <div className="mt-10 flex justify-center">
             <Button 
-              onClick={() => navigate(isAuthenticated ? '/dashboard' : '/login')}
+              onClick={() => navigate('/dashboard')}
               className="px-8 py-6 text-lg bg-workout-primary hover:bg-blue-600 transition-all duration-200 transform hover:-translate-y-1"
             >
-              {isAuthenticated ? 'Go to Dashboard' : 'Get Started'} 
+              Go to Dashboard
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </div>
