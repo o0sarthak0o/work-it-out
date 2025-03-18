@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from "sonner";
-import { useAuth } from './AuthContext';
 
 // Define Exercise type
 export interface Exercise {
@@ -87,77 +86,71 @@ const WorkoutContext = createContext<WorkoutContextType | undefined>(undefined);
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2);
 
 export function WorkoutProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [activeWorkout, setActiveWorkout] = useState<WorkoutSession | null>(null);
   const [exercises] = useState<Exercise[]>(sampleExercises); // In a real app, this would be fetched from an API
 
   // Load workouts from localStorage
   useEffect(() => {
-    if (user) {
-      const storedWorkouts = localStorage.getItem('workouts');
-      if (storedWorkouts) {
-        try {
-          setWorkouts(JSON.parse(storedWorkouts));
-        } catch (error) {
-          console.error('Failed to parse stored workouts:', error);
-          localStorage.removeItem('workouts');
-        }
-      } else {
-        // Set sample workout for first-time users
-        const sampleWorkout: Workout = {
-          id: generateId(),
-          name: 'Full Body Workout',
-          description: 'A complete full body workout for beginners',
-          exercises: [
-            {
-              id: generateId(),
-              exerciseId: 'e1',
-              exerciseName: 'Bench Press',
-              sets: [
-                { id: generateId(), weight: 45, reps: 10, completed: false },
-                { id: generateId(), weight: 45, reps: 10, completed: false },
-                { id: generateId(), weight: 45, reps: 10, completed: false },
-              ],
-            },
-            {
-              id: generateId(),
-              exerciseId: 'e2',
-              exerciseName: 'Squat',
-              sets: [
-                { id: generateId(), weight: 85, reps: 8, completed: false },
-                { id: generateId(), weight: 85, reps: 8, completed: false },
-                { id: generateId(), weight: 85, reps: 8, completed: false },
-              ],
-            },
-            {
-              id: generateId(),
-              exerciseId: 'e3',
-              exerciseName: 'Deadlift',
-              sets: [
-                { id: generateId(), weight: 95, reps: 6, completed: false },
-                { id: generateId(), weight: 95, reps: 6, completed: false },
-                { id: generateId(), weight: 95, reps: 6, completed: false },
-              ],
-            },
-          ],
-          createdAt: new Date().toISOString(),
-        };
-        setWorkouts([sampleWorkout]);
-        localStorage.setItem('workouts', JSON.stringify([sampleWorkout]));
+    const storedWorkouts = localStorage.getItem('workouts');
+    if (storedWorkouts) {
+      try {
+        setWorkouts(JSON.parse(storedWorkouts));
+      } catch (error) {
+        console.error('Failed to parse stored workouts:', error);
+        localStorage.removeItem('workouts');
       }
     } else {
-      setWorkouts([]);
-      setActiveWorkout(null);
+      // Set sample workout for first-time users
+      const sampleWorkout: Workout = {
+        id: generateId(),
+        name: 'Full Body Workout',
+        description: 'A complete full body workout for beginners',
+        exercises: [
+          {
+            id: generateId(),
+            exerciseId: 'e1',
+            exerciseName: 'Bench Press',
+            sets: [
+              { id: generateId(), weight: 45, reps: 10, completed: false },
+              { id: generateId(), weight: 45, reps: 10, completed: false },
+              { id: generateId(), weight: 45, reps: 10, completed: false },
+            ],
+          },
+          {
+            id: generateId(),
+            exerciseId: 'e2',
+            exerciseName: 'Squat',
+            sets: [
+              { id: generateId(), weight: 85, reps: 8, completed: false },
+              { id: generateId(), weight: 85, reps: 8, completed: false },
+              { id: generateId(), weight: 85, reps: 8, completed: false },
+            ],
+          },
+          {
+            id: generateId(),
+            exerciseId: 'e3',
+            exerciseName: 'Deadlift',
+            sets: [
+              { id: generateId(), weight: 95, reps: 6, completed: false },
+              { id: generateId(), weight: 95, reps: 6, completed: false },
+              { id: generateId(), weight: 95, reps: 6, completed: false },
+            ],
+          },
+        ],
+        createdAt: new Date().toISOString(),
+      };
+      setWorkouts([sampleWorkout]);
+      localStorage.setItem('workouts', JSON.stringify([sampleWorkout]));
     }
-  }, [user]);
+  }, []);
 
   // Save workouts to localStorage whenever they change
   useEffect(() => {
-    if (user && workouts.length > 0) {
+    if (workouts.length > 0) {
       localStorage.setItem('workouts', JSON.stringify(workouts));
     }
-  }, [workouts, user]);
+  }, [workouts]);
 
   // Get a specific workout
   const getWorkout = (workoutId: string) => {
