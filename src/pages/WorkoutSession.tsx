@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 
 const WorkoutSession = () => {
   const { workoutId } = useParams<{ workoutId: string }>();
-  const { isAuthenticated } = useAuth();
   const { getWorkout, activeWorkout, startWorkout, endWorkout, updateCurrentWorkoutExercise } = useWorkout();
   const navigate = useNavigate();
   const [isEndDialogOpen, setIsEndDialogOpen] = useState(false);
@@ -22,16 +22,9 @@ const WorkoutSession = () => {
 
   const workout = workoutId ? getWorkout(workoutId) : undefined;
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
-
   // Redirect to workout detail if no active workout and workout id exists
   useEffect(() => {
-    if (!activeWorkout && workoutId && isAuthenticated) {
+    if (!activeWorkout && workoutId) {
       if (workout) {
         startWorkout(workoutId);
       } else {
@@ -39,7 +32,7 @@ const WorkoutSession = () => {
         navigate('/dashboard');
       }
     }
-  }, [activeWorkout, workoutId, isAuthenticated, navigate, workout, startWorkout]);
+  }, [activeWorkout, workoutId, navigate, workout, startWorkout]);
 
   // Timer logic
   useEffect(() => {
