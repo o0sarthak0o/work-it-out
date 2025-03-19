@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +37,7 @@ export interface Workout {
   exercises: WorkoutExercise[];
   createdAt: string;
   lastPerformed?: string;
+  deleted?: boolean; // Added for soft deletion
 }
 
 // Define WorkoutSession type
@@ -99,10 +99,11 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     const fetchWorkouts = async () => {
       setIsLoading(true);
       try {
-        // Fetch workouts from Supabase
+        // Fetch workouts from Supabase (only non-deleted workouts)
         const { data: workoutsData, error: workoutsError } = await supabase
           .from('workouts')
           .select('*')
+          .eq('deleted', false) // Only select non-deleted workouts
           .order('created_at', { ascending: false });
 
         if (workoutsError) {
@@ -291,7 +292,8 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
         description: workout.description || undefined,
         exercises,
         createdAt: workout.created_at,
-        lastPerformed: workout.last_performed || undefined
+        lastPerformed: workout.last_performed || undefined,
+        deleted: workout.deleted
       };
     } catch (error) {
       console.error('Error fetching workout details:', error);
@@ -500,7 +502,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Delete a workout
+  // Delete a workout (now using soft delete)
   const deleteWorkout = async (workoutId: string): Promise<void> => {
     try {
       const workoutToDelete = workouts.find(w => w.id === workoutId);
@@ -509,10 +511,10 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Delete the workout (cascade will delete related exercises and sets)
+      // Soft delete the workout by setting the deleted flag to true
       const { error } = await supabase
         .from('workouts')
-        .delete()
+        .update({ deleted: true })
         .eq('id', workoutId);
 
       if (error) throw error;

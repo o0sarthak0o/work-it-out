@@ -181,6 +181,7 @@ export type Database = {
       workouts: {
         Row: {
           created_at: string
+          deleted: boolean
           description: string | null
           id: string
           last_performed: string | null
@@ -188,6 +189,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted?: boolean
           description?: string | null
           id?: string
           last_performed?: string | null
@@ -195,6 +197,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted?: boolean
           description?: string | null
           id?: string
           last_performed?: string | null
