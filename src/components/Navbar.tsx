@@ -2,10 +2,12 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Dumbbell } from 'lucide-react';
+import { Dumbbell, LogOut } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuth();
 
   return (
     <nav className="w-full bg-white shadow-sm border-b border-gray-200">
@@ -18,13 +20,35 @@ const Navbar: React.FC = () => {
             </Link>
           </div>
           <div className="flex items-center space-x-4">
-            <Button 
-              variant="default" 
-              onClick={() => navigate('/dashboard')} 
-              className="bg-workout-primary hover:bg-blue-600"
-            >
-              Dashboard
-            </Button>
+            {isAuthenticated ? (
+              <>
+                <Button 
+                  variant="default" 
+                  onClick={() => navigate('/dashboard')} 
+                  className="bg-workout-primary hover:bg-blue-600"
+                >
+                  Dashboard
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    await logout();
+                    navigate('/');
+                  }}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <Button 
+                variant="default" 
+                onClick={() => navigate('/login')} 
+                className="bg-workout-primary hover:bg-blue-600"
+              >
+                Login
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -18,6 +18,8 @@ interface AuthContextType {
   loading: boolean;
   loginWithOTP: (email: string) => Promise<void>;
   verifyOTP: (email: string, token: string) => Promise<void>;
+  loginWithEmailAndPassword: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -140,6 +142,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Email and password login
+  const loginWithEmailAndPassword = async (email: string, password: string): Promise<void> => {
+    try {
+      setLoading(true);
+      console.log("Starting email/password authentication");
+      
+      // Hard-coded restriction to only allow sarthakagarwal32@gmail.com
+      if (email !== 'sarthakagarwal32@gmail.com') {
+        throw new Error("Access denied. Only specific users are allowed.");
+      }
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        console.error("Login error details:", error);
+        throw error;
+      }
+      
+      toast.success("Successfully logged in");
+    } catch (error: any) {
+      console.error('Login failed:', error);
+      toast.error(error.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Signup with email and password
+  const signup = async (email: string, password: string): Promise<void> => {
+    try {
+      setLoading(true);
+      console.log("Starting signup process");
+      
+      // Hard-coded restriction to only allow sarthakagarwal32@gmail.com
+      if (email !== 'sarthakagarwal32@gmail.com') {
+        throw new Error("Access denied. Only specific users are allowed to register.");
+      }
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      });
+      
+      if (error) {
+        console.error("Signup error details:", error);
+        throw error;
+      }
+      
+      toast.success("Account created successfully. You can now log in.");
+    } catch (error: any) {
+      console.error('Signup failed:', error);
+      toast.error(error.message || "Signup failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Verify OTP
   const verifyOTP = async (email: string, token: string): Promise<void> => {
     try {
@@ -199,6 +261,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         loginWithOTP,
         verifyOTP,
+        loginWithEmailAndPassword,
+        signup,
         logout,
         isAuthenticated: !!user,
       }}
